@@ -915,6 +915,11 @@ function loginSuccess() {
   document.getElementById('screen-auth').style.display = 'none';
   document.getElementById('screen-app').classList.add('active');
   currentUser = auth.currentUser;
+  // Reset tombol login & register agar tidak stuck disabled
+  const btnL = document.getElementById('btn-login');
+  const btnR = document.getElementById('btn-register');
+  if(btnL){btnL.disabled=false;btnL.textContent='Masuk';}
+  if(btnR){btnR.disabled=false;btnR.textContent='Buat Akun';}
   document.getElementById('avatar-btn').textContent = currentProfile.avatar || 'U';
   const isAdmin = currentProfile.role === 'admin';
   document.getElementById('admin-badge').style.display = isAdmin ? '' : 'none';
@@ -922,6 +927,7 @@ function loginSuccess() {
   hideLoading();
   _cachedPosts = [];
   initHomeListener();
+  fetchStatUsers();
   updateProfile();
   listenNotifs();
   initOneSignalForUser(currentProfile.id);
@@ -1073,10 +1079,14 @@ async function sendPushNotif(toUserId, title, message, postId) {
 window.doLogout = async function() {
   if (postsUnsubscribe) { postsUnsubscribe(); postsUnsubscribe=null; }
   if (notifUnsubscribe) { notifUnsubscribe(); notifUnsubscribe=null; }
-  // Reset cache
+  // Reset cache dan UI stats
   _cachedPosts = [];
+  Object.keys(_profileCache).forEach(k => delete _profileCache[k]);
   currentUser = null;
   currentProfile = null;
+  // Reset stat-users ke 0 agar fetchStatUsers berjalan lagi saat login berikutnya
+  const su = document.getElementById('stat-users');
+  if(su) su.textContent = '0';
   // Putuskan OneSignal dari akun ini agar notif tidak dikirim ke perangkat orang lain
   try { OneSignalDeferred.push(async os => await os.logout()); } catch(e) {}
   await signOut(auth);
@@ -1104,6 +1114,8 @@ window.navTo = function(page) {
 /* ── HOME ── */
 // Cache snapshot posts agar filter tidak re-subscribe
 let _cachedPosts = [];
+// Cache profil global — fetch sekali, update saat ada data baru
+const _profileCache = {};
 
 async function _applyHomeFilter(posts) {
   const allPosts = posts.filter(p=>!p.sold);
@@ -1127,20 +1139,21 @@ function initHomeListener() {
   } catch(e) { console.error('initHomeListener error:', e); }
 }
 
+// Fetch stat-users sekali saja saat login
+async function fetchStatUsers() {
+  try {
+    const usersSnap = await getDocs(collection(db,'profiles'));
+    document.getElementById('stat-users').textContent = usersSnap.docs.filter(d=>d.data().role==='user').length;
+  } catch(e) { console.error('stat-users error:', e); }
+}
+
 async function renderHome() {
-  // Jika listener sudah ada, re-render dari cache tanpa re-subscribe
+  // Jika listener sudah ada, cukup re-apply filter dari cache
   if(postsUnsubscribe) {
     await _applyHomeFilter(_cachedPosts);
     return;
   }
   initHomeListener();
-  // Fetch stat-users sekali saja
-  if(document.getElementById('stat-users').textContent==='0') {
-    try {
-      const usersSnap = await getDocs(collection(db,'profiles'));
-      document.getElementById('stat-users').textContent = usersSnap.docs.filter(d=>d.data().role==='user').length;
-    } catch(e) { console.error('stat-users error:', e); }
-  }
 }
 
 // Simple HTML escape untuk mencegah XSS dari data Firestore
@@ -1152,23 +1165,23 @@ async function renderGrid(cid, posts) {
   const c = document.getElementById(cid);
   if(!c) return;
   if(!posts || !posts.length) { c.innerHTML='<div class="empty" style="grid-column:1/-1"><div class="ei">🔍</div><p>Belum ada postingan</p></div>'; return; }
-  // Tampilkan skeleton loading sementara profil di-fetch
-  c.innerHTML='<div class="empty" style="grid-column:1/-1"><div class="ei">⏳</div><p>Memuat postingan...</p></div>';
-  // Ambil semua profil sekaligus secara paralel
-  const profileCache = {};
+  // Fetch profil yang belum di-cache (pakai cache global)
   const uniqueUserIds = [...new Set(posts.map(p=>p.userId).filter(Boolean))];
-  await Promise.all(uniqueUserIds.map(async uid => {
-    try {
-      const d = await getDoc(doc(db,'profiles',uid));
-      profileCache[uid] = d.exists() ? d.data() : {name:'User',avatar:'U'};
-    } catch(e) {
-      profileCache[uid] = {name:'User',avatar:'U'};
-    }
-  }));
+  const uncached = uniqueUserIds.filter(uid => !_profileCache[uid]);
+  if(uncached.length) {
+    await Promise.all(uncached.map(async uid => {
+      try {
+        const d = await getDoc(doc(db,'profiles',uid));
+        _profileCache[uid] = d.exists() ? d.data() : {name:'User',avatar:'U'};
+      } catch(e) {
+        _profileCache[uid] = {name:'User',avatar:'U'};
+      }
+    }));
+  }
   // Sort: star → verified → normal, lalu by createdAt desc
   const sorted = [...posts].sort((a,b)=>{
-    const ua = profileCache[a.userId]||{};
-    const ub = profileCache[b.userId]||{};
+    const ua = _profileCache[a.userId]||{};
+    const ub = _profileCache[b.userId]||{};
     const rankA = ua.badge==='star'?2:ua.badge==='verified'?1:0;
     const rankB = ub.badge==='star'?2:ub.badge==='verified'?1:0;
     if(rankB!==rankA) return rankB-rankA;
@@ -1178,10 +1191,10 @@ async function renderGrid(cid, posts) {
   });
   const emojis = {'Halfmoon':'🐟','Crowntail / Serit':'🐠','Plakat':'🎏','Giant':'🐡','Rosetail':'💜','Double Tail':'🔵','Dumbo Ear':'👂','Lainnya':'🐟'};
   c.innerHTML = sorted.map(p=>{
-    const u = profileCache[p.userId]||{name:'User',avatar:'U'};
+    const u = _profileCache[p.userId]||{name:'User',avatar:'U'};
     const bc = p.type==='jual'?'pt-jual':p.type==='lelang'?'pt-lelang':'pt-beli';
     const bl = p.type==='jual'?'Jual':p.type==='lelang'?'Lelang':'Cari';
-    const imgSrc = p.imageUrl ? `<img src="${esc(p.imageUrl)}" alt="" loading="lazy" onerror="this.style.display='none'">` : `<div class="pcard-emoji">${emojis[p.jenis]||'🐟'}</div>`;
+    const imgSrc = p.imageUrl ? `<img src="${p.imageUrl}" alt="" loading="lazy" onerror="this.style.display='none'">` : `<div class="pcard-emoji">${emojis[p.jenis]||'🐟'}</div>`;
     const isStar = u.badge==='star';
     const isVerified = u.badge==='verified';
     const ribbon = isStar?'<span class="star-ribbon">⭐ Star</span>':isVerified?'<span class="verified-ribbon">✓ Verified</span>':'';
@@ -1211,7 +1224,7 @@ function renderAuctionCards(auctions) {
   const emojis={'Halfmoon':'🐟','Crowntail / Serit':'🐠','Plakat':'🎏','Giant':'🐡','Rosetail':'💜','Double Tail':'🔵','Dumbo Ear':'👂','Lainnya':'🐟'};
   c.innerHTML = auctions.map(p => {
     const rem = getTimer(p.endTime?.toMillis ? p.endTime.toMillis() : p.endTime);
-    const img = p.imageUrl ? `<img src="${esc(p.imageUrl)}" style="width:100%;height:100%;object-fit:cover" onerror="this.style.display='none'">` : (emojis[p.jenis]||'🐟');
+    const img = p.imageUrl ? `<img src="${p.imageUrl}" style="width:100%;height:100%;object-fit:cover" onerror="this.style.display='none'">` : (emojis[p.jenis]||'🐟');
     const pid = esc(p.id);
     const title = esc(p.title||'Tanpa Judul');
     return `<div class="acard" onclick="openDetail('${pid}')">
@@ -1259,13 +1272,15 @@ window.filterSearch = function(f,el) {
 };
 window.doSearch = async function() {
   const q2 = document.getElementById('search-input').value.toLowerCase().trim();
+  const c = document.getElementById('search-results');
+  if(c) c.innerHTML='<div class="empty" style="grid-column:1/-1"><div class="ei">⏳</div><p>Mencari...</p></div>';
   try {
     const snap = await getDocs(query(collection(db,'posts'),orderBy('createdAt','desc')));
     let posts = snap.docs.map(d=>({id:d.id,...d.data()})).filter(p=>!p.sold);
     if(searchFilter!=='semua') posts=posts.filter(p=>p.type===searchFilter);
     if(q2) posts=posts.filter(p=>p.title?.toLowerCase().includes(q2)||p.desc?.toLowerCase().includes(q2)||p.jenis?.toLowerCase().includes(q2)||p.tags?.some(t=>t.includes(q2)));
     await renderGrid('search-results', posts);
-  } catch(e) { console.error(e); }
+  } catch(e) { console.error(e); if(c) c.innerHTML='<div class="empty" style="grid-column:1/-1"><div class="ei">❌</div><p>Gagal memuat hasil pencarian</p></div>'; }
 };
 function renderSearch(){doSearch();}
 
@@ -1285,7 +1300,7 @@ window.openDetail = async function(pid) {
     const isOwner = currentProfile?.id === post.userId;
     const isAdmin = currentProfile?.role === 'admin';
     const emojis={'Halfmoon':'🐟','Crowntail / Serit':'🐠','Plakat':'🎏','Giant':'🐡','Rosetail':'💜','Double Tail':'🔵','Dumbo Ear':'👂','Lainnya':'🐟'};
-    const tags = post.tags?.map(t=>`<span class="dtag">${t}</span>`).join('')||'';
+    const tags = post.tags?.map(t=>`<span class="dtag">${esc(t)}</span>`).join('')||'';
     const imgHtml = post.imageUrl ? `<img src="${post.imageUrl}" alt="">` : `<span style="font-size:75px">${emojis[post.jenis]||'🐟'}</span>`;
     const cmtHtml = await Promise.all(comments.map(async c=>{
       let cu={name:'User',avatar:'U'};
@@ -1319,20 +1334,20 @@ window.openDetail = async function(pid) {
       <div class="back-row" onclick="navTo('home')">← Kembali</div>
       <div class="detail-img">${imgHtml}</div>
       <span class="ptag ${bc}" style="position:static;display:inline-flex;margin-bottom:9px;border-radius:5px">${bl}</span>
-      <div class="dtitle">${post.title||''}</div>
+      <div class="dtitle">${esc(post.title||'')}</div>
       <div class="dprice">${post.type==='beli'?'Budget ':''}Rp ${Number(post.price||0).toLocaleString('id')}</div>
       <div class="seller-row">
         <div class="s-info">
-          <div class="s-av">${user.avatar||'U'}</div>
+          <div class="s-av">${esc(user.avatar||'U')}</div>
           <div>
-            <div class="s-name">${user.name||'User'}${sellerBadgeHtml}</div>
+            <div class="s-name">${esc(user.name||'User')}${sellerBadgeHtml}</div>
             <div class="s-city">📍 Batam</div>
           </div>
         </div>
         <button class="btn-wa" onclick="contactWA('${safePhone}')">📱 WA</button>
       </div>
       ${adminAct}
-      <div class="ddesc">${post.desc||'Tidak ada deskripsi'}</div>
+      <div class="ddesc">${esc(post.desc||'Tidak ada deskripsi')}</div>
       <div class="dtags">${tags}</div>
       ${bidSec}
       <div class="cmt-section">
@@ -1397,7 +1412,7 @@ window.handlePhoto = async function(e) {
   const zone = document.getElementById('upload-zone');
   const preview = URL.createObjectURL(file);
   zone.classList.add('has-img', 'uploading');
-  zone.innerHTML = `<input type="file" accept="image/*" onchange="handlePhoto(event)"><img src="${preview}" alt="preview">`;
+  zone.innerHTML = `<input type="file" accept="image/*" onchange="handlePhoto(event)"><img src="${preview}" alt="preview" onload="URL.revokeObjectURL(this.src)">`;
   document.getElementById('upload-progress').style.display = 'block';
   document.getElementById('upload-bar').style.width = '30%';
   showToast('Memproses foto...');
@@ -1441,6 +1456,7 @@ window.submitPost = async function() {
   const desc=document.getElementById('post-desc').value.trim();
   const tags=document.getElementById('post-tags').value.trim();
   if(!title){showToast('Masukkan judul');return;}
+  if(!jenis){showToast('Pilih jenis ikan');return;}
   if(!price){showToast('Masukkan harga');return;}
   if(!desc){showToast('Masukkan deskripsi');return;}
   const uploadBar=document.getElementById('upload-bar').style.width;
@@ -1474,23 +1490,31 @@ window.submitPost = async function() {
 /* ── BID ── */
 window.openBidModal = async function(pid) {
   if(!currentProfile){showToast('Login dulu');return;}
-  const postDoc=await getDoc(doc(db,'posts',pid));
-  if(!postDoc.exists()) return;
-  const post=postDoc.data();
-  if(post.userId===currentProfile.id){showToast('Tidak bisa menawar postingan sendiri');return;}
-  activeBidPost=pid;
-  document.getElementById('modal-cur-bid').textContent='Rp '+Number(post.currentBid||post.startBid||0).toLocaleString('id');
-  document.getElementById('modal-bid-val').value='';
-  openModal('modal-bid');
+  try {
+    const postDoc=await getDoc(doc(db,'posts',pid));
+    if(!postDoc.exists()){showToast('Postingan tidak ditemukan');return;}
+    const post=postDoc.data();
+    if(post.userId===currentProfile.id){showToast('Tidak bisa menawar postingan sendiri');return;}
+    activeBidPost=pid;
+    document.getElementById('modal-cur-bid').textContent='Rp '+Number(post.currentBid||post.startBid||0).toLocaleString('id');
+    document.getElementById('modal-bid-val').value='';
+    openModal('modal-bid');
+  } catch(e){showToast('Gagal membuka form tawar');console.error(e);}
 };
 window.submitBid = async function() {
   if(!activeBidPost){showToast('Terjadi kesalahan, coba lagi');return;}
-  const postDoc=await getDoc(doc(db,'posts',activeBidPost));
-  if(!postDoc.exists()) return;
-  const post=postDoc.data();
-  const amt=parseInt(document.getElementById('modal-bid-val').value);
-  if(!amt||amt<=(post.currentBid||post.startBid||0)){showToast('Penawaran harus lebih dari Rp '+Number(post.currentBid||0).toLocaleString('id'));return;}
-  try{
+  const btn = document.querySelector('#modal-bid .btn-p');
+  if(btn){btn.disabled=true;btn.textContent='Menyimpan...';}
+  try {
+    const postDoc=await getDoc(doc(db,'posts',activeBidPost));
+    if(!postDoc.exists()){showToast('Postingan tidak ditemukan');return;}
+    const post=postDoc.data();
+    const amt=parseInt(document.getElementById('modal-bid-val').value);
+    if(!amt||amt<=(post.currentBid||post.startBid||0)){
+      showToast('Penawaran harus lebih dari Rp '+Number(post.currentBid||0).toLocaleString('id'));
+      if(btn){btn.disabled=false;btn.textContent='🔨 Ajukan Penawaran';}
+      return;
+    }
     await addDoc(collection(db,'posts',activeBidPost,'bids'),{userId:currentProfile.id,bidderName:currentProfile.name,amount:amt,createdAt:serverTimestamp()});
     await updateDoc(doc(db,'posts',activeBidPost),{currentBid:amt,bidCount:(post.bidCount||0)+1});
     await addDoc(collection(db,'notifications'),{toUserId:post.userId,fromName:currentProfile.name,text:'Penawaran baru Rp '+amt.toLocaleString('id'),postId:activeBidPost,type:'bid',read:false,createdAt:serverTimestamp()});
@@ -1498,14 +1522,17 @@ window.submitBid = async function() {
     closeModal('modal-bid');
     showToast('Penawaran Rp '+amt.toLocaleString('id')+' berhasil! 🔨');
     if(currentDetail===activeBidPost) openDetail(activeBidPost);
-  }catch(e){showToast('Gagal mengajukan penawaran');console.error(e);}
+  } catch(e) {
+    showToast('Gagal mengajukan penawaran');console.error(e);
+    if(btn){btn.disabled=false;btn.textContent='🔨 Ajukan Penawaran';}
+  }
 };
 
 /* ── PROFILE ── */
 async function updateProfile() {
   if(!currentProfile) return;
   document.getElementById('profile-av').textContent=currentProfile.avatar||'U';
-  document.getElementById('profile-name').textContent=currentProfile.name;
+  document.getElementById('profile-name').textContent=esc(currentProfile.name||'User');
   document.getElementById('profile-phone').textContent=currentProfile.phone||'-';
   try{
     const snap=await getDocs(query(collection(db,'posts'),where('userId','==',currentProfile.id)));
@@ -1513,7 +1540,7 @@ async function updateProfile() {
     document.getElementById('my-posts-n').textContent=posts.length;
     document.getElementById('my-sold-n').textContent=posts.filter(p=>p.sold).length;
     await renderGrid('my-grid',posts);
-  }catch(e){console.error(e);}
+  }catch(e){console.error('updateProfile error:',e);showToast('Gagal memuat profil');}
 }
 
 /* ── ADMIN ── */
@@ -1536,7 +1563,7 @@ window.renderAdmin = async function() {
       <div class="urow">
         <div class="urow-l">
           <div class="urow-av" style="background:${u.blocked?'var(--red)':'var(--blue)'}">${u.avatar||'U'}</div>
-          <div><div class="urow-name">${u.name}</div><div class="urow-ph">${u.phone||'-'}</div></div>
+          <div><div class="urow-name">${esc(u.name||'-')}</div><div class="urow-ph">${esc(u.phone||'-')}</div></div>
         </div>
         <div style="display:flex;align-items:center;gap:5px">
           <span class="sbadge ${u.blocked?'sb-blocked':'sb-active'}">${u.blocked?'Blokir':'Aktif'}</span>
@@ -1551,7 +1578,7 @@ window.renderAdmin = async function() {
       return `<div class="urow" style="background:var(--white);border:1.5px solid var(--border);border-radius:var(--r);margin-bottom:6px">
         <div class="urow-l">
           <div style="font-size:22px;width:32px;text-align:center">${p.imageUrl?'🖼️':'🐟'}</div>
-          <div><div class="urow-name" style="font-size:11px">${p.title}</div><div class="urow-ph">${u2.name} • ${p.type} • Rp ${Number(p.price).toLocaleString('id')}</div></div>
+          <div><div class="urow-name" style="font-size:11px">${esc(p.title||'')}</div><div class="urow-ph">${esc(u2.name||'?')} • ${p.type} • Rp ${Number(p.price||0).toLocaleString('id')}</div></div>
         </div>
         <button class="bsm b-del" onclick="adminDelPost('${p.id}')">🗑</button>
       </div>`;
@@ -1561,22 +1588,26 @@ window.renderAdmin = async function() {
 };
 
 window.adminBlock = async function(id) {
-  try{await updateDoc(doc(db,'profiles',id),{blocked:true});showToast('User diblokir');renderAdmin();}catch(e){showToast('Gagal');console.error(e);}
+  try{await updateDoc(doc(db,'profiles',id),{blocked:true});delete _profileCache[id];showToast('User diblokir');renderAdmin();}catch(e){showToast('Gagal');console.error(e);}
 };
 window.adminUnblock = async function(id) {
-  try{await updateDoc(doc(db,'profiles',id),{blocked:false});showToast('Blokir dibuka');renderAdmin();}catch(e){showToast('Gagal');console.error(e);}
+  try{await updateDoc(doc(db,'profiles',id),{blocked:false});delete _profileCache[id];showToast('Blokir dibuka');renderAdmin();}catch(e){showToast('Gagal');console.error(e);}
 };
 window.adminDelUser = async function(id) {
   if(!confirm('Hapus pengguna ini? Semua postingannya juga akan dihapus.')) return;
   try {
     // Hapus semua post milik user ini
     const postsSnap = await getDocs(query(collection(db,'posts'),where('userId','==',id)));
+    const deletedIds = postsSnap.docs.map(d=>d.id);
     await Promise.all(postsSnap.docs.map(d=>deleteDoc(doc(db,'posts',d.id))));
+    // Hapus dari cache lokal juga agar tidak muncul lagi sebelum onSnapshot refresh
+    _cachedPosts = _cachedPosts.filter(p=>!deletedIds.includes(p.id));
     // Hapus notifikasi milik user ini
     const notifsSnap = await getDocs(query(collection(db,'notifications'),where('toUserId','==',id)));
     await Promise.all(notifsSnap.docs.map(d=>deleteDoc(doc(db,'notifications',d.id))));
     // Hapus profil
     await deleteDoc(doc(db,'profiles',id));
+    delete _profileCache[id];
     showToast('Pengguna & postingannya dihapus');
     renderAdmin();
   } catch(e) { showToast('Gagal hapus pengguna'); console.error(e); }
@@ -1619,7 +1650,7 @@ function listenNotifs() {
       const ico=n.type==='bid'?'🔨':'💬';
       return `<div class="ni-item ${n.read?'':'unread'}" onclick="clickNotif('${n.id}','${n.postId||''}')">
         <div class="ni-dot">${ico}</div>
-        <div><div class="ni-txt"><strong>${n.fromName}</strong> ${n.type==='bid'?'menawar':'bertanya'}<br>${n.text}</div><div class="ni-time">${t}</div></div>
+        <div><div class="ni-txt"><strong>${esc(n.fromName||'')}</strong> ${n.type==='bid'?'menawar':'bertanya'}<br>${esc(n.text||'')}</div><div class="ni-time">${t}</div></div>
       </div>`;
     }).join('');
   });
@@ -1632,9 +1663,12 @@ window.clickNotif = async function(nid,pid) {
 };
 window.markAllRead = async function() {
   if(!currentProfile) return;
-  const snap=await getDocs(query(collection(db,'notifications'),where('toUserId','==',currentProfile.id),where('read','==',false)));
-  const batch=snap.docs.map(d=>updateDoc(doc(db,'notifications',d.id),{read:true}));
-  await Promise.all(batch);
+  try {
+    const snap=await getDocs(query(collection(db,'notifications'),where('toUserId','==',currentProfile.id),where('read','==',false)));
+    if(!snap.docs.length){showToast('Semua notifikasi sudah dibaca');return;}
+    await Promise.all(snap.docs.map(d=>updateDoc(doc(db,'notifications',d.id),{read:true})));
+    showToast('Semua notifikasi ditandai dibaca ✅');
+  } catch(e){showToast('Gagal tandai dibaca');console.error(e);}
 };
 
 /* ── UTILS ── */
