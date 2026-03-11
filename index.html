@@ -1554,6 +1554,10 @@ window.renderAdmin = async function() {
         <div style="display:flex;align-items:center;gap:5px">
           <span class="sbadge ${u.blocked?'sb-blocked':'sb-active'}">${u.blocked?'Blokir':'Aktif'}</span>
           <div class="btns">
+            ${u.badge==='verified'
+              ? `<button class="bsm b-unblock" onclick="adminRemoveBadge('${u.id}')">✓ Cabut</button>`
+              : `<button class="bsm" style="background:var(--blue-light);color:var(--blue);border:1.5px solid var(--blue-mid)" onclick="adminSetBadge('${u.id}','verified')">✓ Verified</button>`
+            }
             ${u.blocked?`<button class="bsm b-unblock" onclick="adminUnblock('${u.id}')">Buka</button>`:`<button class="bsm b-block" onclick="adminBlock('${u.id}')">Blokir</button>`}
             <button class="bsm b-del" onclick="adminDelUser('${u.id}')">🗑</button>
           </div>
@@ -1614,6 +1618,12 @@ window.adminDelPost = async function(id) {
 };
 window.adminSold = async function(id) {
   try{await updateDoc(doc(db,'posts',id),{sold:true});showToast('Ditandai terjual');renderAdmin();}catch(e){showToast('Gagal');console.error(e);}
+};
+window.adminSetBadge = async function(id, badge) {
+  try{await updateDoc(doc(db,'profiles',id),{badge});showToast('Badge ✓ Verified diberikan');renderAdmin();}catch(e){showToast('Gagal');console.error(e);}
+};
+window.adminRemoveBadge = async function(id) {
+  try{await updateDoc(doc(db,'profiles',id),{badge:null});showToast('Badge dicabut');renderAdmin();}catch(e){showToast('Gagal');console.error(e);}
 };
 
 /* ── NOTIFIKASI REALTIME ── */
