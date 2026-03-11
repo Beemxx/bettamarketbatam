@@ -1105,13 +1105,13 @@ window.navTo = function(page) {
 // Cache snapshot posts agar filter tidak re-subscribe
 let _cachedPosts = [];
 
-function _applyHomeFilter(posts) {
+async function _applyHomeFilter(posts) {
   const allPosts = posts.filter(p=>!p.sold);
   document.getElementById('stat-posts').textContent = allPosts.length;
   document.getElementById('stat-auctions').textContent = allPosts.filter(p=>p.type==='lelang').length;
   let fp = allPosts.filter(p=>p.type!=='lelang');
   if(currentFilter!=='semua') fp=fp.filter(p=>p.type===currentFilter||p.jenis?.toLowerCase()===currentFilter||p.tags?.includes(currentFilter));
-  renderGrid('post-grid', fp);
+  await renderGrid('post-grid', fp);
   renderAuctionCards(allPosts.filter(p=>p.type==='lelang'));
 }
 
@@ -1122,7 +1122,7 @@ function initHomeListener() {
     const q = query(collection(db,'posts'), orderBy('createdAt','desc'));
     postsUnsubscribe = onSnapshot(q, (snap) => {
       _cachedPosts = snap.docs.map(d=>({id:d.id,...d.data()}));
-      _applyHomeFilter(_cachedPosts);
+      _applyHomeFilter(_cachedPosts).catch(e => console.error('applyHomeFilter error:', e));
     }, (e) => { console.error('onSnapshot error:', e); });
   } catch(e) { console.error('initHomeListener error:', e); }
 }
@@ -1130,7 +1130,7 @@ function initHomeListener() {
 async function renderHome() {
   // Jika listener sudah ada, re-render dari cache tanpa re-subscribe
   if(postsUnsubscribe) {
-    _applyHomeFilter(_cachedPosts);
+    await _applyHomeFilter(_cachedPosts);
     return;
   }
   initHomeListener();
@@ -1152,7 +1152,9 @@ async function renderGrid(cid, posts) {
   const c = document.getElementById(cid);
   if(!c) return;
   if(!posts || !posts.length) { c.innerHTML='<div class="empty" style="grid-column:1/-1"><div class="ei">🔍</div><p>Belum ada postingan</p></div>'; return; }
-  // Ambil semua profil yang belum di-cache sekaligus
+  // Tampilkan skeleton loading sementara profil di-fetch
+  c.innerHTML='<div class="empty" style="grid-column:1/-1"><div class="ei">⏳</div><p>Memuat postingan...</p></div>';
+  // Ambil semua profil sekaligus secara paralel
   const profileCache = {};
   const uniqueUserIds = [...new Set(posts.map(p=>p.userId).filter(Boolean))];
   await Promise.all(uniqueUserIds.map(async uid => {
@@ -1245,7 +1247,7 @@ window.filterPosts = function(f,el) {
   document.querySelectorAll('#home-chips .chip').forEach(c=>c.classList.remove('active'));
   if(el) el.classList.add('active');
   // Re-apply filter dari cache, tidak perlu re-subscribe
-  _applyHomeFilter(_cachedPosts);
+  _applyHomeFilter(_cachedPosts).catch(e => console.error('filterPosts error:', e));
 };
 
 /* ── SEARCH ── */
