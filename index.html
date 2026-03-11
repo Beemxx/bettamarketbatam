@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+
 <html lang="id">
 <head>
 <meta charset="UTF-8">
@@ -7,12 +8,14 @@
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Lora:wght@600;700&display=swap" rel="stylesheet">
 
 <!-- PWA meta -->
+
 <meta name="theme-color" content="#1a6bcc">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Betta Market Batam">
 
 <!-- Manifest inline via blob (tidak perlu file manifest.json terpisah) -->
+
 <script>
 (function(){
   const manifest = {
@@ -38,10 +41,13 @@
 </script>
 
 <!-- Service Worker OneSignal - didaftarkan langsung, OneSignal SDK yang handle -->
+
 <!-- CATATAN: OneSignalSDK.page.js akan auto-register SW dari CDN, tidak perlu file lokal -->
 
 <!-- OneSignal SDK v16 -->
+
 <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
+
 <script>
 window.OneSignalDeferred = window.OneSignalDeferred || [];
 OneSignalDeferred.push(async function(OneSignal) {
@@ -73,6 +79,7 @@ OneSignalDeferred.push(async function(OneSignal) {
   });
 });
 </script>
+
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 :root{
@@ -444,10 +451,12 @@ button,input,select,textarea{font-family:inherit}
 .upload-progress{height:3px;background:var(--border);border-radius:2px;margin-top:8px;overflow:hidden}
 .upload-progress-bar{height:100%;background:var(--blue);border-radius:2px;transition:width .3s;width:0}
 </style>
+
 </head>
 <body>
 
 <!-- IKLAN SPLASH -->
+
 <div id="iklan-splash">
   <div class="ik-topbar">
     <div class="ik-brand">
@@ -472,12 +481,14 @@ button,input,select,textarea{font-family:inherit}
 </div>
 
 <!-- LOADING -->
+
 <div class="loading-ov" id="loading-ov">
   <div class="spinner"></div>
   <p id="loading-msg">Memuat...</p>
 </div>
 
 <!-- AUTH -->
+
 <div id="screen-auth" class="screen active">
   <div class="blob blob1"></div>
   <div class="blob blob2"></div>
@@ -492,50 +503,54 @@ button,input,select,textarea{font-family:inherit}
       <div class="tab" onclick="switchTab('register')">Daftar</div>
     </div>
 
-    <!-- LOGIN -->
-    <div id="form-login">
-      <div class="fg">
-        <label>Email</label>
-        <input type="email" id="login-email" placeholder="email@kamu.com">
-      </div>
-      <div class="fg">
-        <label>Password</label>
-        <input type="password" id="login-pass" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()">
-      </div>
-      <button class="btn-p" id="btn-login" onclick="doLogin()">Masuk</button>
-      <p class="otp-note" style="cursor:pointer" onclick="doForgotPassword()">Lupa password? <span style="color:var(--blue)">Reset di sini</span></p>
+```
+<!-- LOGIN -->
+<div id="form-login">
+  <div class="fg">
+    <label>Email</label>
+    <input type="email" id="login-email" placeholder="email@kamu.com">
+  </div>
+  <div class="fg">
+    <label>Password</label>
+    <input type="password" id="login-pass" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()">
+  </div>
+  <button class="btn-p" id="btn-login" onclick="doLogin()">Masuk</button>
+  <p class="otp-note" style="cursor:pointer" onclick="doForgotPassword()">Lupa password? <span style="color:var(--blue)">Reset di sini</span></p>
 
-    </div>
+</div>
 
-    <!-- REGISTER -->
-    <div id="form-register" style="display:none">
-      <div class="fg">
-        <label>Nama Lengkap</label>
-        <input type="text" id="reg-name" placeholder="Nama kamu">
-      </div>
-      <div class="fg">
-        <label>Nomor WhatsApp</label>
-        <input type="tel" id="reg-phone" placeholder="08xxxxxxxxxx" maxlength="13">
-      </div>
-      <div class="fg">
-        <label>Email</label>
-        <input type="email" id="reg-email" placeholder="email@kamu.com">
-      </div>
-      <div class="fg">
-        <label>Password</label>
-        <input type="password" id="reg-pass" placeholder="Min. 6 karakter">
-      </div>
-      <div class="fg">
-        <label>Konfirmasi Password</label>
-        <input type="password" id="reg-pass2" placeholder="Ulangi password" onkeydown="if(event.key==='Enter')doRegister()">
-      </div>
-      <button class="btn-p" id="btn-register" onclick="doRegister()">Buat Akun</button>
-      <p class="otp-note">Daftar berarti setuju syarat &amp; ketentuan CupangBatam</p>
-    </div>
+<!-- REGISTER -->
+<div id="form-register" style="display:none">
+  <div class="fg">
+    <label>Nama Lengkap</label>
+    <input type="text" id="reg-name" placeholder="Nama kamu">
+  </div>
+  <div class="fg">
+    <label>Nomor WhatsApp</label>
+    <input type="tel" id="reg-phone" placeholder="08xxxxxxxxxx" maxlength="13">
+  </div>
+  <div class="fg">
+    <label>Email</label>
+    <input type="email" id="reg-email" placeholder="email@kamu.com">
+  </div>
+  <div class="fg">
+    <label>Password</label>
+    <input type="password" id="reg-pass" placeholder="Min. 6 karakter">
+  </div>
+  <div class="fg">
+    <label>Konfirmasi Password</label>
+    <input type="password" id="reg-pass2" placeholder="Ulangi password" onkeydown="if(event.key==='Enter')doRegister()">
+  </div>
+  <button class="btn-p" id="btn-register" onclick="doRegister()">Buat Akun</button>
+  <p class="otp-note">Daftar berarti setuju syarat &amp; ketentuan CupangBatam</p>
+</div>
+```
+
   </div>
 </div>
 
 <!-- APP -->
+
 <div id="screen-app" class="screen">
   <div class="topbar">
     <div class="tb-brand" onclick="navTo('home')">
@@ -584,117 +599,120 @@ button,input,select,textarea{font-family:inherit}
       <div id="auction-list" style="padding-bottom:6px"></div>
     </div>
 
-    <!-- SEARCH -->
-    <div class="page" id="page-search">
-      <div class="search-bar">
-        <input type="text" id="search-input" placeholder="🔍 Cari ikan cupang..." oninput="doSearch()">
-        <button onclick="doSearch()">🔍</button>
-      </div>
-      <div class="chips">
-        <div class="chip active" onclick="filterSearch('semua',this)">Semua</div>
-        <div class="chip" onclick="filterSearch('jual',this)">Jual</div>
-        <div class="chip" onclick="filterSearch('lelang',this)">Lelang</div>
-        <div class="chip" onclick="filterSearch('beli',this)">Cari Beli</div>
-      </div>
-      <div id="search-results" class="pgrid"></div>
-    </div>
+```
+<!-- SEARCH -->
+<div class="page" id="page-search">
+  <div class="search-bar">
+    <input type="text" id="search-input" placeholder="🔍 Cari ikan cupang..." oninput="doSearch()">
+    <button onclick="doSearch()">🔍</button>
+  </div>
+  <div class="chips">
+    <div class="chip active" onclick="filterSearch('semua',this)">Semua</div>
+    <div class="chip" onclick="filterSearch('jual',this)">Jual</div>
+    <div class="chip" onclick="filterSearch('lelang',this)">Lelang</div>
+    <div class="chip" onclick="filterSearch('beli',this)">Cari Beli</div>
+  </div>
+  <div id="search-results" class="pgrid"></div>
+</div>
 
-    <!-- CREATE -->
-    <div class="page" id="page-create">
-      <div class="create-hdr"><h2>Buat Postingan</h2><p>Pasang iklan jual, lelang, atau cari beli cupang</p></div>
-      <div class="type-sel">
-        <div class="type-btn active" onclick="selectType('jual',this)"><span>🏷️</span>Jual</div>
-        <div class="type-btn" onclick="selectType('lelang',this)"><span>🔨</span>Lelang</div>
-        <div class="type-btn" onclick="selectType('beli',this)"><span>🛒</span>Cari Beli</div>
-      </div>
-      <div class="upload-zone" id="upload-zone">
-        <input type="file" accept="image/*" id="photo-input" onchange="handlePhoto(event)">
-        <div class="upload-ico">📷</div>
-        <div class="upload-txt">Upload Foto Ikan</div>
-        <div class="upload-sub">JPG/PNG, maks 5MB</div>
-      </div>
-      <div class="upload-progress" id="upload-progress" style="display:none">
-        <div class="upload-progress-bar" id="upload-bar"></div>
-      </div>
-      <div class="fl">
-        <label>Judul Postingan</label>
-        <input type="text" id="post-title" placeholder="cth: Halfmoon Blue Dragon, kondisi sehat">
-        <label>Jenis / Varietas</label>
-        <select id="post-jenis">
-          <option value="">Pilih jenis...</option>
-          <option>Halfmoon</option><option>Crowntail / Serit</option><option>Plakat</option>
-          <option>Giant</option><option>Double Tail</option><option>Rosetail</option>
-          <option>Dumbo Ear</option><option>Lainnya</option>
-        </select>
-        <label>Harga (Rp)</label>
-        <input type="number" id="post-price" placeholder="cth: 150000">
-        <div id="auction-fields" style="display:none">
-          <label>Harga Mulai Lelang (Rp)</label>
-          <input type="number" id="post-start-bid" placeholder="Harga awal lelang">
-          <label>Durasi Lelang</label>
-          <select id="post-duration">
-            <option value="1">1 Jam</option><option value="3">3 Jam</option>
-            <option value="6">6 Jam</option><option value="12">12 Jam</option>
-            <option value="24">24 Jam</option><option value="48">2 Hari</option><option value="72">3 Hari</option>
-          </select>
-        </div>
-        <label>Deskripsi</label>
-        <textarea id="post-desc" placeholder="Deskripsikan kondisi, ukuran, warna, dll..."></textarea>
-        <label>Tags (pisah koma)</label>
-        <input type="text" id="post-tags" placeholder="cth: sehat, agresif, venom">
-      </div>
-      <button class="btn-p" id="btn-post" onclick="submitPost()" style="margin-top:10px">📤 Pasang Iklan</button>
+<!-- CREATE -->
+<div class="page" id="page-create">
+  <div class="create-hdr"><h2>Buat Postingan</h2><p>Pasang iklan jual, lelang, atau cari beli cupang</p></div>
+  <div class="type-sel">
+    <div class="type-btn active" onclick="selectType('jual',this)"><span>🏷️</span>Jual</div>
+    <div class="type-btn" onclick="selectType('lelang',this)"><span>🔨</span>Lelang</div>
+    <div class="type-btn" onclick="selectType('beli',this)"><span>🛒</span>Cari Beli</div>
+  </div>
+  <div class="upload-zone" id="upload-zone">
+    <input type="file" accept="image/*" id="photo-input" onchange="handlePhoto(event)">
+    <div class="upload-ico">📷</div>
+    <div class="upload-txt">Upload Foto Ikan</div>
+    <div class="upload-sub">JPG/PNG, maks 5MB</div>
+  </div>
+  <div class="upload-progress" id="upload-progress" style="display:none">
+    <div class="upload-progress-bar" id="upload-bar"></div>
+  </div>
+  <div class="fl">
+    <label>Judul Postingan</label>
+    <input type="text" id="post-title" placeholder="cth: Halfmoon Blue Dragon, kondisi sehat">
+    <label>Jenis / Varietas</label>
+    <select id="post-jenis">
+      <option value="">Pilih jenis...</option>
+      <option>Halfmoon</option><option>Crowntail / Serit</option><option>Plakat</option>
+      <option>Giant</option><option>Double Tail</option><option>Rosetail</option>
+      <option>Dumbo Ear</option><option>Lainnya</option>
+    </select>
+    <label>Harga (Rp)</label>
+    <input type="number" id="post-price" placeholder="cth: 150000">
+    <div id="auction-fields" style="display:none">
+      <label>Harga Mulai Lelang (Rp)</label>
+      <input type="number" id="post-start-bid" placeholder="Harga awal lelang">
+      <label>Durasi Lelang</label>
+      <select id="post-duration">
+        <option value="1">1 Jam</option><option value="3">3 Jam</option>
+        <option value="6">6 Jam</option><option value="12">12 Jam</option>
+        <option value="24">24 Jam</option><option value="48">2 Hari</option><option value="72">3 Hari</option>
+      </select>
     </div>
+    <label>Deskripsi</label>
+    <textarea id="post-desc" placeholder="Deskripsikan kondisi, ukuran, warna, dll..."></textarea>
+    <label>Tags (pisah koma)</label>
+    <input type="text" id="post-tags" placeholder="cth: sehat, agresif, venom">
+  </div>
+  <button class="btn-p" id="btn-post" onclick="submitPost()" style="margin-top:10px">📤 Pasang Iklan</button>
+</div>
 
-    <!-- PROFILE -->
-    <div class="page" id="page-profile">
-      <div class="prof-hdr">
-        <div class="prof-av" id="profile-av">U</div>
-        <div class="prof-name" id="profile-name">User</div>
-        <div class="prof-phone" id="profile-phone">+62...</div>
-        <div class="prof-stats">
-          <div class="ps"><div class="n" id="my-posts-n">0</div><div class="l">Postingan</div></div>
-          <div class="ps"><div class="n" id="my-sold-n">0</div><div class="l">Terjual</div></div>
-        </div>
-      </div>
-      <div id="admin-menu-link" style="display:none">
-        <div class="menu-card" style="margin-bottom:9px">
-          <div class="mi" onclick="navTo('admin')">
-            <div class="mi-l"><div class="mi-ico">⚙️</div><span class="mi-lbl" style="color:var(--gold);font-weight:800">Panel Admin</span></div>
-            <span class="mi-arr">›</span>
-          </div>
-        </div>
-      </div>
-      <div class="sh"><h3>Postingan Saya</h3></div>
-      <div class="pgrid" id="my-grid"><div class="empty" style="grid-column:1/-1"><div class="ei">📋</div><p>Belum ada postingan</p></div></div>
-      <div class="menu-card" style="margin-top:14px">
-        <div class="mi" onclick="showToast('Fitur edit profil segera hadir')">
-          <div class="mi-l"><div class="mi-ico">✏️</div><span class="mi-lbl">Edit Profil</span></div><span class="mi-arr">›</span>
-        </div>
-        <div class="mi">
-          <div class="mi-l"><div class="mi-ico">📜</div><span class="mi-lbl">Riwayat Transaksi</span></div><span class="mi-arr">›</span>
-        </div>
-        <div class="mi" onclick="doLogout()">
-          <div class="mi-l"><div class="mi-ico">🚪</div><span class="mi-lbl" style="color:var(--red)">Keluar</span></div><span class="mi-arr" style="color:var(--red)">›</span>
-        </div>
+<!-- PROFILE -->
+<div class="page" id="page-profile">
+  <div class="prof-hdr">
+    <div class="prof-av" id="profile-av">U</div>
+    <div class="prof-name" id="profile-name">User</div>
+    <div class="prof-phone" id="profile-phone">+62...</div>
+    <div class="prof-stats">
+      <div class="ps"><div class="n" id="my-posts-n">0</div><div class="l">Postingan</div></div>
+      <div class="ps"><div class="n" id="my-sold-n">0</div><div class="l">Terjual</div></div>
+    </div>
+  </div>
+  <div id="admin-menu-link" style="display:none">
+    <div class="menu-card" style="margin-bottom:9px">
+      <div class="mi" onclick="navTo('admin')">
+        <div class="mi-l"><div class="mi-ico">⚙️</div><span class="mi-lbl" style="color:var(--gold);font-weight:800">Panel Admin</span></div>
+        <span class="mi-arr">›</span>
       </div>
     </div>
-
-    <!-- ADMIN -->
-    <div class="page" id="page-admin">
-      <div class="back-row" onclick="navTo('profile')">← Kembali</div>
-      <div class="admin-hdr"><h2>⚙️ Panel Admin</h2><p>Kelola pengguna &amp; konten CupangBatam</p></div>
-      <div class="astats" id="admin-stats"></div>
-      <div class="utbl">
-        <div class="utbl-hdr"><span>👥 Pengguna</span><span id="admin-user-cnt" style="color:var(--text3);font-size:11px"></span></div>
-        <div id="admin-users"></div>
-      </div>
-      <div class="sh"><h3>📋 Semua Postingan</h3></div>
-      <div id="admin-posts"></div>
+  </div>
+  <div class="sh"><h3>Postingan Saya</h3></div>
+  <div class="pgrid" id="my-grid"><div class="empty" style="grid-column:1/-1"><div class="ei">📋</div><p>Belum ada postingan</p></div></div>
+  <div class="menu-card" style="margin-top:14px">
+    <div class="mi" onclick="showToast('Fitur edit profil segera hadir')">
+      <div class="mi-l"><div class="mi-ico">✏️</div><span class="mi-lbl">Edit Profil</span></div><span class="mi-arr">›</span>
     </div>
+    <div class="mi">
+      <div class="mi-l"><div class="mi-ico">📜</div><span class="mi-lbl">Riwayat Transaksi</span></div><span class="mi-arr">›</span>
+    </div>
+    <div class="mi" onclick="doLogout()">
+      <div class="mi-l"><div class="mi-ico">🚪</div><span class="mi-lbl" style="color:var(--red)">Keluar</span></div><span class="mi-arr" style="color:var(--red)">›</span>
+    </div>
+  </div>
+</div>
 
-    <!-- DETAIL -->
-    <div class="page" id="page-detail"></div>
+<!-- ADMIN -->
+<div class="page" id="page-admin">
+  <div class="back-row" onclick="navTo('profile')">← Kembali</div>
+  <div class="admin-hdr"><h2>⚙️ Panel Admin</h2><p>Kelola pengguna &amp; konten CupangBatam</p></div>
+  <div class="astats" id="admin-stats"></div>
+  <div class="utbl">
+    <div class="utbl-hdr"><span>👥 Pengguna</span><span id="admin-user-cnt" style="color:var(--text3);font-size:11px"></span></div>
+    <div id="admin-users"></div>
+  </div>
+  <div class="sh"><h3>📋 Semua Postingan</h3></div>
+  <div id="admin-posts"></div>
+</div>
+
+<!-- DETAIL -->
+<div class="page" id="page-detail"></div>
+```
+
   </div>
 
   <div class="bnav">
@@ -707,6 +725,7 @@ button,input,select,textarea{font-family:inherit}
 </div>
 
 <!-- MODAL BID -->
+
 <div class="modal-ov" id="modal-bid">
   <div class="modal-sh">
     <div class="modal-handle"></div>
@@ -724,6 +743,7 @@ button,input,select,textarea{font-family:inherit}
 <div class="toast" id="toast"></div>
 
 <!-- FIREBASE SDK -->
+
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswordResetEmail, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
@@ -894,12 +914,14 @@ function loginSuccess() {
   document.getElementById('screen-auth').classList.remove('active');
   document.getElementById('screen-auth').style.display = 'none';
   document.getElementById('screen-app').classList.add('active');
+  currentUser = auth.currentUser;
   document.getElementById('avatar-btn').textContent = currentProfile.avatar || 'U';
   const isAdmin = currentProfile.role === 'admin';
   document.getElementById('admin-badge').style.display = isAdmin ? '' : 'none';
   document.getElementById('admin-menu-link').style.display = isAdmin ? '' : 'none';
   hideLoading();
-  renderHome();
+  _cachedPosts = [];
+  initHomeListener();
   updateProfile();
   listenNotifs();
   initOneSignalForUser(currentProfile.id);
@@ -957,7 +979,7 @@ function _renderIklanSlider(items) {
 
   slider.innerHTML = items.map((item) => {
     const banner = item.imageUrl
-      ? `<img src="${item.imageUrl}" alt="" onerror="this.parentElement.innerHTML='<div class=ik-slide-placeholder>${item.emoji||'🐟'}</div>'">`
+      ? `<img src="${item.imageUrl}" alt="" onerror="this.style.display='none'">`
       : `<div class="ik-slide-placeholder">${item.emoji||'🐟'}</div>`;
     const metaDate = item.tanggal ? `<div class="ik-meta-chip">📅 ${item.tanggal}</div>` : '';
     const metaLoc  = item.lokasi  ? `<div class="ik-meta-chip">📍 ${item.lokasi}</div>`  : '';
@@ -1051,6 +1073,10 @@ async function sendPushNotif(toUserId, title, message, postId) {
 window.doLogout = async function() {
   if (postsUnsubscribe) { postsUnsubscribe(); postsUnsubscribe=null; }
   if (notifUnsubscribe) { notifUnsubscribe(); notifUnsubscribe=null; }
+  // Reset cache
+  _cachedPosts = [];
+  currentUser = null;
+  currentProfile = null;
   // Putuskan OneSignal dari akun ini agar notif tidak dikirim ke perangkat orang lain
   try { OneSignalDeferred.push(async os => await os.logout()); } catch(e) {}
   await signOut(auth);
@@ -1060,11 +1086,13 @@ window.doLogout = async function() {
 
 /* ── NAV ── */
 window.navTo = function(page) {
+  const pageEl = document.getElementById('page-'+page);
+  if(!pageEl) { console.warn('navTo: page not found:', page); return; }
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
-  document.getElementById('page-'+page).classList.add('active');
+  pageEl.classList.add('active');
   document.querySelectorAll('.ni').forEach(n=>n.classList.remove('active'));
   const nm={home:'nav-home',search:'nav-search',profile:'nav-profile'};
-  if(nm[page]) document.getElementById(nm[page]).classList.add('active');
+  if(nm[page]) document.getElementById(nm[page])?.classList.add('active');
   document.getElementById('notif-panel').classList.remove('open');
   if(page==='home') renderHome();
   if(page==='search') renderSearch();
@@ -1074,34 +1102,68 @@ window.navTo = function(page) {
 };
 
 /* ── HOME ── */
-async function renderHome() {
+// Cache snapshot posts agar filter tidak re-subscribe
+let _cachedPosts = [];
+
+function _applyHomeFilter(posts) {
+  const allPosts = posts.filter(p=>!p.sold);
+  document.getElementById('stat-posts').textContent = allPosts.length;
+  document.getElementById('stat-auctions').textContent = allPosts.filter(p=>p.type==='lelang').length;
+  let fp = allPosts.filter(p=>p.type!=='lelang');
+  if(currentFilter!=='semua') fp=fp.filter(p=>p.type===currentFilter||p.jenis?.toLowerCase()===currentFilter||p.tags?.includes(currentFilter));
+  renderGrid('post-grid', fp);
+  renderAuctionCards(allPosts.filter(p=>p.type==='lelang'));
+}
+
+function initHomeListener() {
+  // Buat listener SEKALI saja — jangan reset tiap navTo/filter
+  if(postsUnsubscribe) return;
   try {
-    let q = query(collection(db,'posts'), orderBy('createdAt','desc'));
-    if(postsUnsubscribe) postsUnsubscribe();
+    const q = query(collection(db,'posts'), orderBy('createdAt','desc'));
     postsUnsubscribe = onSnapshot(q, (snap) => {
-      const posts = snap.docs.map(d=>({id:d.id,...d.data()})).filter(p=>!p.sold);
-      document.getElementById('stat-posts').textContent = posts.length;
-      document.getElementById('stat-auctions').textContent = posts.filter(p=>p.type==='lelang').length;
-      let fp = posts.filter(p=>p.type!=='lelang');
-      if(currentFilter!=='semua') fp=fp.filter(p=>p.type===currentFilter||p.jenis?.toLowerCase()===currentFilter||p.tags?.includes(currentFilter));
-      renderGrid('post-grid', fp);
-      renderAuctionCards(posts.filter(p=>p.type==='lelang'));
-    });
-    const usersSnap = await getDocs(collection(db,'profiles'));
-    document.getElementById('stat-users').textContent = usersSnap.docs.filter(d=>d.data().role==='user').length;
-  } catch(e) { console.error('renderHome error:', e); }
+      _cachedPosts = snap.docs.map(d=>({id:d.id,...d.data()}));
+      _applyHomeFilter(_cachedPosts);
+    }, (e) => { console.error('onSnapshot error:', e); });
+  } catch(e) { console.error('initHomeListener error:', e); }
+}
+
+async function renderHome() {
+  // Jika listener sudah ada, re-render dari cache tanpa re-subscribe
+  if(postsUnsubscribe) {
+    _applyHomeFilter(_cachedPosts);
+    return;
+  }
+  initHomeListener();
+  // Fetch stat-users sekali saja
+  if(document.getElementById('stat-users').textContent==='0') {
+    try {
+      const usersSnap = await getDocs(collection(db,'profiles'));
+      document.getElementById('stat-users').textContent = usersSnap.docs.filter(d=>d.data().role==='user').length;
+    } catch(e) { console.error('stat-users error:', e); }
+  }
+}
+
+// Simple HTML escape untuk mencegah XSS dari data Firestore
+function esc(str) {
+  return String(str||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 }
 
 async function renderGrid(cid, posts) {
   const c = document.getElementById(cid);
-  if(!posts.length) { c.innerHTML='<div class="empty" style="grid-column:1/-1"><div class="ei">🔍</div><p>Belum ada postingan</p></div>'; return; }
+  if(!c) return;
+  if(!posts || !posts.length) { c.innerHTML='<div class="empty" style="grid-column:1/-1"><div class="ei">🔍</div><p>Belum ada postingan</p></div>'; return; }
+  // Ambil semua profil yang belum di-cache sekaligus
   const profileCache = {};
-  for(const p of posts) {
-    if(!profileCache[p.userId]) {
-      try { const d=await getDoc(doc(db,'profiles',p.userId)); profileCache[p.userId]=d.exists()?d.data():{name:'User',avatar:'U'}; } catch(e){ profileCache[p.userId]={name:'User',avatar:'U'}; }
+  const uniqueUserIds = [...new Set(posts.map(p=>p.userId).filter(Boolean))];
+  await Promise.all(uniqueUserIds.map(async uid => {
+    try {
+      const d = await getDoc(doc(db,'profiles',uid));
+      profileCache[uid] = d.exists() ? d.data() : {name:'User',avatar:'U'};
+    } catch(e) {
+      profileCache[uid] = {name:'User',avatar:'U'};
     }
-  }
-  // Sort: star first, then verified, then normal — by createdAt within each group
+  }));
+  // Sort: star → verified → normal, lalu by createdAt desc
   const sorted = [...posts].sort((a,b)=>{
     const ua = profileCache[a.userId]||{};
     const ub = profileCache[b.userId]||{};
@@ -1117,19 +1179,22 @@ async function renderGrid(cid, posts) {
     const u = profileCache[p.userId]||{name:'User',avatar:'U'};
     const bc = p.type==='jual'?'pt-jual':p.type==='lelang'?'pt-lelang':'pt-beli';
     const bl = p.type==='jual'?'Jual':p.type==='lelang'?'Lelang':'Cari';
-    const img = p.imageUrl ? `<img src="${p.imageUrl}" alt="" loading="lazy">` : `<div class="pcard-emoji">${emojis[p.jenis]||'🐟'}</div>`;
+    const imgSrc = p.imageUrl ? `<img src="${esc(p.imageUrl)}" alt="" loading="lazy" onerror="this.style.display='none'">` : `<div class="pcard-emoji">${emojis[p.jenis]||'🐟'}</div>`;
     const isStar = u.badge==='star';
     const isVerified = u.badge==='verified';
     const ribbon = isStar?'<span class="star-ribbon">⭐ Star</span>':isVerified?'<span class="verified-ribbon">✓ Verified</span>':'';
     const cardClass = isStar?'pcard is-star':isVerified?'pcard is-verified':'pcard';
     const sellerBadge = isStar?'<span class="seller-badge star">⭐ Star</span>':isVerified?'<span class="seller-badge verified">✓ Verified</span>':'';
-    return `<div class="${cardClass}" onclick="openDetail('${p.id}')">
-      <div class="pcard-img">${img}<span class="ptag ${bc}">${bl}</span>${ribbon}</div>
+    const firstName = esc((u.name||'User').split(' ')[0]);
+    const title = esc(p.title||'Tanpa Judul');
+    const price = Number(p.price||0).toLocaleString('id');
+    return `<div class="${cardClass}" onclick="openDetail('${esc(p.id)}')">
+      <div class="pcard-img">${imgSrc}<span class="ptag ${bc}">${bl}</span>${ribbon}</div>
       <div class="pcard-body">
-        <div class="pcard-title">${p.title}</div>
-        <div class="pcard-price">${p.type==='beli'?'Budget ':''}Rp ${Number(p.price).toLocaleString('id')}</div>
+        <div class="pcard-title">${title}</div>
+        <div class="pcard-price">${p.type==='beli'?'Budget ':''}Rp ${price}</div>
         <div class="pcard-meta">
-          <div class="pcard-seller">👤 ${u.name?.split(' ')[0]||'User'}${sellerBadge}</div>
+          <div class="pcard-seller">👤 ${firstName}${sellerBadge}</div>
           <div class="pcard-cmt">💬 ${p.commentCount||0}</div>
         </div>
       </div>
@@ -1139,16 +1204,19 @@ async function renderGrid(cid, posts) {
 
 function renderAuctionCards(auctions) {
   const c = document.getElementById('auction-list');
+  if(!c) return;
   if(!auctions.length) { c.innerHTML='<div class="empty"><div class="ei">🔨</div><p>Belum ada lelang aktif</p></div>'; return; }
   const emojis={'Halfmoon':'🐟','Crowntail / Serit':'🐠','Plakat':'🎏','Giant':'🐡','Rosetail':'💜','Double Tail':'🔵','Dumbo Ear':'👂','Lainnya':'🐟'};
   c.innerHTML = auctions.map(p => {
     const rem = getTimer(p.endTime?.toMillis ? p.endTime.toMillis() : p.endTime);
-    const img = p.imageUrl ? `<img src="${p.imageUrl}" style="width:100%;height:100%;object-fit:cover">` : (emojis[p.jenis]||'🐟');
-    return `<div class="acard" onclick="openDetail('${p.id}')">
+    const img = p.imageUrl ? `<img src="${esc(p.imageUrl)}" style="width:100%;height:100%;object-fit:cover" onerror="this.style.display='none'">` : (emojis[p.jenis]||'🐟');
+    const pid = esc(p.id);
+    const title = esc(p.title||'Tanpa Judul');
+    return `<div class="acard" onclick="openDetail('${pid}')">
       <div class="acard-top">
         <div class="acard-thumb">${img}</div>
         <div class="acard-info">
-          <h4>${p.title}</h4>
+          <h4>${title}</h4>
           <p>${p.bidCount||0} penawaran</p>
           <div class="acard-prices">
             <div class="ap"><label>Mulai</label><div class="val">Rp ${Number(p.startBid||0).toLocaleString('id')}</div></div>
@@ -1158,7 +1226,7 @@ function renderAuctionCards(auctions) {
       </div>
       <div class="acard-foot">
         <div class="timer">⏱ ${rem}</div>
-        <button class="btn-bid" onclick="event.stopPropagation();openBidModal('${p.id}')">Tawar</button>
+        <button class="btn-bid" onclick="event.stopPropagation();openBidModal('${pid}')">Tawar</button>
       </div>
     </div>`;
   }).join('');
@@ -1176,7 +1244,8 @@ window.filterPosts = function(f,el) {
   currentFilter=f;
   document.querySelectorAll('#home-chips .chip').forEach(c=>c.classList.remove('active'));
   if(el) el.classList.add('active');
-  renderHome();
+  // Re-apply filter dari cache, tidak perlu re-subscribe
+  _applyHomeFilter(_cachedPosts);
 };
 
 /* ── SEARCH ── */
@@ -1193,7 +1262,7 @@ window.doSearch = async function() {
     let posts = snap.docs.map(d=>({id:d.id,...d.data()})).filter(p=>!p.sold);
     if(searchFilter!=='semua') posts=posts.filter(p=>p.type===searchFilter);
     if(q2) posts=posts.filter(p=>p.title?.toLowerCase().includes(q2)||p.desc?.toLowerCase().includes(q2)||p.jenis?.toLowerCase().includes(q2)||p.tags?.some(t=>t.includes(q2)));
-    renderGrid('search-results', posts);
+    await renderGrid('search-results', posts);
   } catch(e) { console.error(e); }
 };
 function renderSearch(){doSearch();}
@@ -1206,6 +1275,7 @@ window.openDetail = async function(pid) {
     const postDoc = await getDoc(doc(db,'posts',pid));
     if(!postDoc.exists()){hideLoading();showToast('Postingan tidak ditemukan');return;}
     const post = {id:pid,...postDoc.data()};
+    if(!post.userId){hideLoading();showToast('Data postingan tidak lengkap');return;}
     const userDoc = await getDoc(doc(db,'profiles',post.userId));
     const user = userDoc.exists() ? userDoc.data() : {name:'User',avatar:'U',phone:''};
     const cmtsSnap = await getDocs(query(collection(db,'posts',pid,'comments'),orderBy('createdAt','asc')));
@@ -1217,9 +1287,11 @@ window.openDetail = async function(pid) {
     const imgHtml = post.imageUrl ? `<img src="${post.imageUrl}" alt="">` : `<span style="font-size:75px">${emojis[post.jenis]||'🐟'}</span>`;
     const cmtHtml = await Promise.all(comments.map(async c=>{
       let cu={name:'User',avatar:'U'};
-      try{const cd=await getDoc(doc(db,'profiles',c.userId));if(cd.exists()) cu=cd.data();}catch(e){}
+      try{
+        if(c.userId){ const cd=await getDoc(doc(db,'profiles',c.userId)); if(cd.exists()) cu=cd.data(); }
+      }catch(e){}
       const t=c.createdAt?.toDate?c.createdAt.toDate().toLocaleString('id-ID',{hour:'2-digit',minute:'2-digit',day:'numeric',month:'short'}):'Baru saja';
-      return `<div class="cmt-item"><div class="cmt-av">${cu.avatar||'U'}</div><div class="cmt-bubble"><div class="cmt-author">${cu.name}</div><div class="cmt-text">${c.text}</div><div class="cmt-time">${t}</div></div></div>`;
+      return `<div class="cmt-item"><div class="cmt-av">${esc(cu.avatar||'U')}</div><div class="cmt-bubble"><div class="cmt-author">${esc(cu.name||'User')}</div><div class="cmt-text">${esc(c.text||'')}</div><div class="cmt-time">${t}</div></div></div>`;
     }));
     let bidSec='';
     if(post.type==='lelang'){
@@ -1232,18 +1304,33 @@ window.openDetail = async function(pid) {
     if(isAdmin) adminAct=`<div class="admin-act"><p>⚙️ Kontrol Admin</p><div class="btns"><button class="bsm b-del" onclick="adminDelPost('${pid}')">🗑 Hapus</button>${!post.sold?`<button class="bsm b-unblock" onclick="adminSold('${pid}')">✅ Terjual</button>`:''}</div></div>`;
     const bc=post.type==='jual'?'pt-jual':post.type==='lelang'?'pt-lelang':'pt-beli';
     const bl=post.type==='jual'?'Jual':post.type==='lelang'?'Lelang':'Cari Beli';
-    document.getElementById('page-detail').innerHTML=`
+    const sellerBadgeHtml = user.badge==='star'
+      ? '<span class="seller-badge star">⭐ Star</span>'
+      : user.badge==='verified'
+      ? '<span class="seller-badge verified">✓ Verified</span>'
+      : '';
+    const safePhone = (user.phone||'').replace(/'/g,"\\'");
+    const detailEl = document.getElementById('page-detail');
+    detailEl.innerHTML = '';
+    // Build HTML safely
+    detailEl.innerHTML=`
       <div class="back-row" onclick="navTo('home')">← Kembali</div>
       <div class="detail-img">${imgHtml}</div>
       <span class="ptag ${bc}" style="position:static;display:inline-flex;margin-bottom:9px;border-radius:5px">${bl}</span>
-      <div class="dtitle">${post.title}</div>
-      <div class="dprice">${post.type==='beli'?'Budget ':''}Rp ${Number(post.price).toLocaleString('id')}</div>
+      <div class="dtitle">${post.title||''}</div>
+      <div class="dprice">${post.type==='beli'?'Budget ':''}Rp ${Number(post.price||0).toLocaleString('id')}</div>
       <div class="seller-row">
-        <div class="s-info"><div class="s-av">${user.avatar||'U'}</div><div><div class="s-name">${user.name}${user.badge==='star'?'<span class="seller-badge star">⭐ Star</span>':user.badge==='verified'?'<span class="seller-badge verified">✓ Verified</span>':''}</div><div class="s-city">📍 Batam</div></div></div>
-        <button class="btn-wa" onclick="contactWA('${user.phone||''}')">📱 WA</button>
+        <div class="s-info">
+          <div class="s-av">${user.avatar||'U'}</div>
+          <div>
+            <div class="s-name">${user.name||'User'}${sellerBadgeHtml}</div>
+            <div class="s-city">📍 Batam</div>
+          </div>
+        </div>
+        <button class="btn-wa" onclick="contactWA('${safePhone}')">📱 WA</button>
       </div>
       ${adminAct}
-      <div class="ddesc">${post.desc}</div>
+      <div class="ddesc">${post.desc||'Tidak ada deskripsi'}</div>
       <div class="dtags">${tags}</div>
       ${bidSec}
       <div class="cmt-section">
@@ -1268,7 +1355,7 @@ window.submitCmt = async function(pid, ownerId) {
     await addDoc(collection(db,'posts',pid,'comments'),{userId:currentProfile.id,text,createdAt:serverTimestamp()});
     await updateDoc(doc(db,'posts',pid),{commentCount:increment(1)});
     const list=document.getElementById('cmt-list');
-    list.innerHTML+=`<div class="cmt-item"><div class="cmt-av">${currentProfile.avatar}</div><div class="cmt-bubble"><div class="cmt-author">${currentProfile.name}</div><div class="cmt-text">${text}</div><div class="cmt-time">Baru saja</div></div></div>`;
+    list.innerHTML+=`<div class="cmt-item"><div class="cmt-av">${esc(currentProfile.avatar||'U')}</div><div class="cmt-bubble"><div class="cmt-author">${esc(currentProfile.name||'User')}</div><div class="cmt-text">${esc(text)}</div><div class="cmt-time">Baru saja</div></div></div>`;
     list.lastChild.scrollIntoView({behavior:'smooth'});
     if(ownerId!==currentProfile.id){
       await addDoc(collection(db,'notifications'),{toUserId:ownerId,fromName:currentProfile.name,text:text.substring(0,50),postId:pid,type:'comment',read:false,createdAt:serverTimestamp()});
@@ -1395,6 +1482,7 @@ window.openBidModal = async function(pid) {
   openModal('modal-bid');
 };
 window.submitBid = async function() {
+  if(!activeBidPost){showToast('Terjadi kesalahan, coba lagi');return;}
   const postDoc=await getDoc(doc(db,'posts',activeBidPost));
   if(!postDoc.exists()) return;
   const post=postDoc.data();
@@ -1422,7 +1510,7 @@ async function updateProfile() {
     const posts=snap.docs.map(d=>({id:d.id,...d.data()}));
     document.getElementById('my-posts-n').textContent=posts.length;
     document.getElementById('my-sold-n').textContent=posts.filter(p=>p.sold).length;
-    renderGrid('my-grid',posts);
+    await renderGrid('my-grid',posts);
   }catch(e){console.error(e);}
 }
 
@@ -1477,11 +1565,36 @@ window.adminUnblock = async function(id) {
   try{await updateDoc(doc(db,'profiles',id),{blocked:false});showToast('Blokir dibuka');renderAdmin();}catch(e){showToast('Gagal');console.error(e);}
 };
 window.adminDelUser = async function(id) {
-  if(!confirm('Hapus pengguna ini?')) return;
-  try{await deleteDoc(doc(db,'profiles',id));showToast('Pengguna dihapus');renderAdmin();}catch(e){showToast('Gagal');console.error(e);}
+  if(!confirm('Hapus pengguna ini? Semua postingannya juga akan dihapus.')) return;
+  try {
+    // Hapus semua post milik user ini
+    const postsSnap = await getDocs(query(collection(db,'posts'),where('userId','==',id)));
+    await Promise.all(postsSnap.docs.map(d=>deleteDoc(doc(db,'posts',d.id))));
+    // Hapus notifikasi milik user ini
+    const notifsSnap = await getDocs(query(collection(db,'notifications'),where('toUserId','==',id)));
+    await Promise.all(notifsSnap.docs.map(d=>deleteDoc(doc(db,'notifications',d.id))));
+    // Hapus profil
+    await deleteDoc(doc(db,'profiles',id));
+    showToast('Pengguna & postingannya dihapus');
+    renderAdmin();
+  } catch(e) { showToast('Gagal hapus pengguna'); console.error(e); }
 };
 window.adminDelPost = async function(id) {
-  try{await deleteDoc(doc(db,'posts',id));showToast('Postingan dihapus');renderAdmin();if(currentDetail===id) navTo('home');}catch(e){showToast('Gagal');console.error(e);}
+  try {
+    // Hapus subcollections comments & bids dulu
+    const [cmtsSnap, bidsSnap] = await Promise.all([
+      getDocs(collection(db,'posts',id,'comments')),
+      getDocs(collection(db,'posts',id,'bids'))
+    ]);
+    await Promise.all([
+      ...cmtsSnap.docs.map(d=>deleteDoc(doc(db,'posts',id,'comments',d.id))),
+      ...bidsSnap.docs.map(d=>deleteDoc(doc(db,'posts',id,'bids',d.id)))
+    ]);
+    await deleteDoc(doc(db,'posts',id));
+    showToast('Postingan dihapus');
+    if(currentDetail===id) { currentDetail=null; navTo('home'); }
+    else renderAdmin();
+  } catch(e) { showToast('Gagal hapus postingan'); console.error(e); }
 };
 window.adminSold = async function(id) {
   try{await updateDoc(doc(db,'posts',id),{sold:true});showToast('Ditandai terjual');renderAdmin();}catch(e){showToast('Gagal');console.error(e);}
@@ -1537,7 +1650,11 @@ window.openModal = function(id){document.getElementById(id).classList.add('open'
 window.closeModal = function(id){document.getElementById(id).classList.remove('open');};
 window.contactWA = function(phone){
   if(!phone){showToast('Nomor WA tidak tersedia');return;}
-  window.open('https://wa.me/'+phone.replace(/^0/,'62')+'?text=Halo+kak,+saya+tertarik+dengan+cupang+di+CupangBatam','_blank');
+  // Normalisasi: hapus +, spasi, strip, lalu pastikan diawali 62
+  let num = String(phone).replace(/[\s\-\+]/g,'');
+  if(num.startsWith('0')) num = '62' + num.slice(1);
+  else if(!num.startsWith('62')) num = '62' + num;
+  window.open('https://wa.me/'+num+'?text=Halo+kak,+saya+tertarik+dengan+cupang+di+Betta+Market+Batam','_blank');
 };
 
 document.addEventListener('click',(e)=>{
@@ -1546,5 +1663,6 @@ document.addEventListener('click',(e)=>{
 });
 document.querySelectorAll('.modal-ov').forEach(o=>{o.addEventListener('click',(e)=>{if(e.target===o) o.classList.remove('open');});});
 </script>
+
 </body>
 </html>
