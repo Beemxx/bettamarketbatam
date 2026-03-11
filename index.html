@@ -925,9 +925,9 @@ function loginSuccess() {
   document.getElementById('admin-badge').style.display = isAdmin ? '' : 'none';
   document.getElementById('admin-menu-link').style.display = isAdmin ? '' : 'none';
   hideLoading();
-  _cachedPosts = [];
-  initHomeListener();
-  fetchStatUsers();
+  _allPosts = [];
+  postsUnsubscribe = null;
+  renderHome();
   updateProfile();
   listenNotifs();
   initOneSignalForUser(currentProfile.id);
@@ -1079,14 +1079,10 @@ async function sendPushNotif(toUserId, title, message, postId) {
 window.doLogout = async function() {
   if (postsUnsubscribe) { postsUnsubscribe(); postsUnsubscribe=null; }
   if (notifUnsubscribe) { notifUnsubscribe(); notifUnsubscribe=null; }
-  // Reset cache dan UI stats
-  _cachedPosts = [];
-  Object.keys(_profileCache).forEach(k => delete _profileCache[k]);
+  // Reset state
+  _allPosts = [];
   currentUser = null;
   currentProfile = null;
-  // Reset stat-users ke 0 agar fetchStatUsers berjalan lagi saat login berikutnya
-  const su = document.getElementById('stat-users');
-  if(su) su.textContent = '0';
   // Putuskan OneSignal dari akun ini agar notif tidak dikirim ke perangkat orang lain
   try { OneSignalDeferred.push(async os => await os.logout()); } catch(e) {}
   await signOut(auth);
@@ -1112,48 +1108,39 @@ window.navTo = function(page) {
 };
 
 /* ── HOME ── */
-// Cache snapshot posts agar filter tidak re-subscribe
-let _cachedPosts = [];
-// Cache profil global — fetch sekali, update saat ada data baru
-const _profileCache = {};
+let _allPosts = []; // cache posts dari onSnapshot
 
-async function _applyHomeFilter(posts) {
-  const allPosts = posts.filter(p=>!p.sold);
-  document.getElementById('stat-posts').textContent = allPosts.length;
-  document.getElementById('stat-auctions').textContent = allPosts.filter(p=>p.type==='lelang').length;
-  let fp = allPosts.filter(p=>p.type!=='lelang');
-  if(currentFilter!=='semua') fp=fp.filter(p=>p.type===currentFilter||p.jenis?.toLowerCase()===currentFilter||p.tags?.includes(currentFilter));
-  await renderGrid('post-grid', fp);
-  renderAuctionCards(allPosts.filter(p=>p.type==='lelang'));
-}
-
-function initHomeListener() {
-  // Buat listener SEKALI saja — jangan reset tiap navTo/filter
-  if(postsUnsubscribe) return;
-  try {
+async function renderHome() {
+  // Mulai/lanjut listener realtime
+  if(!postsUnsubscribe) {
     const q = query(collection(db,'posts'), orderBy('createdAt','desc'));
     postsUnsubscribe = onSnapshot(q, (snap) => {
-      _cachedPosts = snap.docs.map(d=>({id:d.id,...d.data()}));
-      _applyHomeFilter(_cachedPosts).catch(e => console.error('applyHomeFilter error:', e));
+      _allPosts = snap.docs.map(d=>({id:d.id,...d.data()}));
+      _renderHomeData(_allPosts);
     }, (e) => { console.error('onSnapshot error:', e); });
-  } catch(e) { console.error('initHomeListener error:', e); }
-}
-
-// Fetch stat-users sekali saja saat login
-async function fetchStatUsers() {
+  } else {
+    // Listener sudah ada, langsung render dari cache
+    _renderHomeData(_allPosts);
+  }
+  // Hitung jumlah user
   try {
     const usersSnap = await getDocs(collection(db,'profiles'));
-    document.getElementById('stat-users').textContent = usersSnap.docs.filter(d=>d.data().role==='user').length;
+    document.getElementById('stat-users').textContent = usersSnap.docs.length;
   } catch(e) { console.error('stat-users error:', e); }
 }
 
-async function renderHome() {
-  // Jika listener sudah ada, cukup re-apply filter dari cache
-  if(postsUnsubscribe) {
-    await _applyHomeFilter(_cachedPosts);
-    return;
-  }
-  initHomeListener();
+function _renderHomeData(allPosts) {
+  const active = allPosts.filter(p=>!p.sold);
+  document.getElementById('stat-posts').textContent = active.length;
+  document.getElementById('stat-auctions').textContent = active.filter(p=>p.type==='lelang').length;
+  let fp = active.filter(p=>p.type!=='lelang');
+  if(currentFilter!=='semua') fp = fp.filter(p=>
+    p.type===currentFilter ||
+    p.jenis?.toLowerCase()===currentFilter ||
+    p.tags?.includes(currentFilter)
+  );
+  renderGrid('post-grid', fp);
+  renderAuctionCards(active.filter(p=>p.type==='lelang'));
 }
 
 // Simple HTML escape untuk mencegah XSS dari data Firestore
@@ -1164,52 +1151,52 @@ function esc(str) {
 async function renderGrid(cid, posts) {
   const c = document.getElementById(cid);
   if(!c) return;
-  if(!posts || !posts.length) { c.innerHTML='<div class="empty" style="grid-column:1/-1"><div class="ei">🔍</div><p>Belum ada postingan</p></div>'; return; }
-  // Fetch profil yang belum di-cache (pakai cache global)
-  const uniqueUserIds = [...new Set(posts.map(p=>p.userId).filter(Boolean))];
-  const uncached = uniqueUserIds.filter(uid => !_profileCache[uid]);
-  if(uncached.length) {
-    await Promise.all(uncached.map(async uid => {
-      try {
-        const d = await getDoc(doc(db,'profiles',uid));
-        _profileCache[uid] = d.exists() ? d.data() : {name:'User',avatar:'U'};
-      } catch(e) {
-        _profileCache[uid] = {name:'User',avatar:'U'};
-      }
-    }));
+  if(!posts || !posts.length) {
+    c.innerHTML='<div class="empty" style="grid-column:1/-1"><div class="ei">🔍</div><p>Belum ada postingan</p></div>';
+    return;
   }
+  // Fetch semua profil penjual secara paralel
+  const profileCache = {};
+  const uids = [...new Set(posts.map(p=>p.userId).filter(Boolean))];
+  await Promise.all(uids.map(async uid => {
+    try {
+      const d = await getDoc(doc(db,'profiles',uid));
+      profileCache[uid] = d.exists() ? d.data() : {name:'User',avatar:'U'};
+    } catch(e) {
+      profileCache[uid] = {name:'User',avatar:'U'};
+    }
+  }));
   // Sort: star → verified → normal, lalu by createdAt desc
   const sorted = [...posts].sort((a,b)=>{
-    const ua = _profileCache[a.userId]||{};
-    const ub = _profileCache[b.userId]||{};
-    const rankA = ua.badge==='star'?2:ua.badge==='verified'?1:0;
-    const rankB = ub.badge==='star'?2:ub.badge==='verified'?1:0;
-    if(rankB!==rankA) return rankB-rankA;
+    const ua = profileCache[a.userId]||{};
+    const ub = profileCache[b.userId]||{};
+    const ra = ua.badge==='star'?2:ua.badge==='verified'?1:0;
+    const rb = ub.badge==='star'?2:ub.badge==='verified'?1:0;
+    if(rb!==ra) return rb-ra;
     const tA = a.createdAt?.toMillis?a.createdAt.toMillis():0;
     const tB = b.createdAt?.toMillis?b.createdAt.toMillis():0;
     return tB-tA;
   });
   const emojis = {'Halfmoon':'🐟','Crowntail / Serit':'🐠','Plakat':'🎏','Giant':'🐡','Rosetail':'💜','Double Tail':'🔵','Dumbo Ear':'👂','Lainnya':'🐟'};
   c.innerHTML = sorted.map(p=>{
-    const u = _profileCache[p.userId]||{name:'User',avatar:'U'};
+    const u = profileCache[p.userId]||{name:'User',avatar:'U'};
     const bc = p.type==='jual'?'pt-jual':p.type==='lelang'?'pt-lelang':'pt-beli';
     const bl = p.type==='jual'?'Jual':p.type==='lelang'?'Lelang':'Cari';
-    const imgSrc = p.imageUrl ? `<img src="${p.imageUrl}" alt="" loading="lazy" onerror="this.style.display='none'">` : `<div class="pcard-emoji">${emojis[p.jenis]||'🐟'}</div>`;
+    const imgSrc = p.imageUrl
+      ? `<img src="${p.imageUrl}" alt="" loading="lazy" onerror="this.style.display='none'">`
+      : `<div class="pcard-emoji">${emojis[p.jenis]||'🐟'}</div>`;
     const isStar = u.badge==='star';
     const isVerified = u.badge==='verified';
     const ribbon = isStar?'<span class="star-ribbon">⭐ Star</span>':isVerified?'<span class="verified-ribbon">✓ Verified</span>':'';
     const cardClass = isStar?'pcard is-star':isVerified?'pcard is-verified':'pcard';
     const sellerBadge = isStar?'<span class="seller-badge star">⭐ Star</span>':isVerified?'<span class="seller-badge verified">✓ Verified</span>':'';
-    const firstName = esc((u.name||'User').split(' ')[0]);
-    const title = esc(p.title||'Tanpa Judul');
-    const price = Number(p.price||0).toLocaleString('id');
-    return `<div class="${cardClass}" onclick="openDetail('${esc(p.id)}')">
+    return `<div class="${cardClass}" onclick="openDetail('${p.id}')">
       <div class="pcard-img">${imgSrc}<span class="ptag ${bc}">${bl}</span>${ribbon}</div>
       <div class="pcard-body">
-        <div class="pcard-title">${title}</div>
-        <div class="pcard-price">${p.type==='beli'?'Budget ':''}Rp ${price}</div>
+        <div class="pcard-title">${p.title||''}</div>
+        <div class="pcard-price">${p.type==='beli'?'Budget ':''}Rp ${Number(p.price||0).toLocaleString('id')}</div>
         <div class="pcard-meta">
-          <div class="pcard-seller">👤 ${firstName}${sellerBadge}</div>
+          <div class="pcard-seller">👤 ${(u.name||'User').split(' ')[0]}${sellerBadge}</div>
           <div class="pcard-cmt">💬 ${p.commentCount||0}</div>
         </div>
       </div>
@@ -1259,8 +1246,7 @@ window.filterPosts = function(f,el) {
   currentFilter=f;
   document.querySelectorAll('#home-chips .chip').forEach(c=>c.classList.remove('active'));
   if(el) el.classList.add('active');
-  // Re-apply filter dari cache, tidak perlu re-subscribe
-  _applyHomeFilter(_cachedPosts).catch(e => console.error('filterPosts error:', e));
+  _renderHomeData(_allPosts);
 };
 
 /* ── SEARCH ── */
@@ -1588,10 +1574,10 @@ window.renderAdmin = async function() {
 };
 
 window.adminBlock = async function(id) {
-  try{await updateDoc(doc(db,'profiles',id),{blocked:true});delete _profileCache[id];showToast('User diblokir');renderAdmin();}catch(e){showToast('Gagal');console.error(e);}
+  try{await updateDoc(doc(db,'profiles',id),{blocked:true});showToast('User diblokir');renderAdmin();}catch(e){showToast('Gagal');console.error(e);}
 };
 window.adminUnblock = async function(id) {
-  try{await updateDoc(doc(db,'profiles',id),{blocked:false});delete _profileCache[id];showToast('Blokir dibuka');renderAdmin();}catch(e){showToast('Gagal');console.error(e);}
+  try{await updateDoc(doc(db,'profiles',id),{blocked:false});showToast('Blokir dibuka');renderAdmin();}catch(e){showToast('Gagal');console.error(e);}
 };
 window.adminDelUser = async function(id) {
   if(!confirm('Hapus pengguna ini? Semua postingannya juga akan dihapus.')) return;
@@ -1600,14 +1586,11 @@ window.adminDelUser = async function(id) {
     const postsSnap = await getDocs(query(collection(db,'posts'),where('userId','==',id)));
     const deletedIds = postsSnap.docs.map(d=>d.id);
     await Promise.all(postsSnap.docs.map(d=>deleteDoc(doc(db,'posts',d.id))));
-    // Hapus dari cache lokal juga agar tidak muncul lagi sebelum onSnapshot refresh
-    _cachedPosts = _cachedPosts.filter(p=>!deletedIds.includes(p.id));
     // Hapus notifikasi milik user ini
     const notifsSnap = await getDocs(query(collection(db,'notifications'),where('toUserId','==',id)));
     await Promise.all(notifsSnap.docs.map(d=>deleteDoc(doc(db,'notifications',d.id))));
     // Hapus profil
     await deleteDoc(doc(db,'profiles',id));
-    delete _profileCache[id];
     showToast('Pengguna & postingannya dihapus');
     renderAdmin();
   } catch(e) { showToast('Gagal hapus pengguna'); console.error(e); }
