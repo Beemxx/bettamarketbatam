@@ -291,6 +291,17 @@ button,input,select,textarea{font-family:inherit}
 .pcard-price{font-weight:800;font-size:13px;color:var(--blue);margin-bottom:4px}
 .pcard-meta{display:flex;justify-content:space-between;align-items:center}
 .pcard-seller{font-size:10px;color:var(--text3)}.pcard-cmt{font-size:10px;color:var(--text3)}
+/* VERIFIED / STAR BADGE */
+.badge-verified{display:inline-flex;align-items:center;gap:2px;background:linear-gradient(135deg,#1a6bcc,#1254a8);color:#fff;font-size:8px;font-weight:800;padding:2px 5px;border-radius:var(--r-full);letter-spacing:.2px;vertical-align:middle;margin-left:2px}
+.badge-star{display:inline-flex;align-items:center;gap:2px;background:linear-gradient(135deg,#f59e0b,#d97706);color:#fff;font-size:8px;font-weight:800;padding:2px 5px;border-radius:var(--r-full);letter-spacing:.2px;vertical-align:middle;margin-left:2px}
+.pcard.is-star{border-color:#f59e0b;box-shadow:0 4px 16px rgba(245,158,11,.18)}
+.pcard.is-verified{border-color:#1a6bcc;box-shadow:0 4px 16px rgba(26,107,204,.15)}
+.star-ribbon{position:absolute;top:6px;right:6px;background:linear-gradient(135deg,#f59e0b,#d97706);color:#fff;font-size:9px;font-weight:800;padding:2px 6px;border-radius:var(--r-full)}
+.verified-ribbon{position:absolute;top:6px;right:6px;background:linear-gradient(135deg,#1a6bcc,#1254a8);color:#fff;font-size:9px;font-weight:800;padding:2px 6px;border-radius:var(--r-full)}
+/* detail seller badge */
+.seller-badge{display:inline-flex;align-items:center;gap:3px;font-size:9px;font-weight:800;padding:2px 7px;border-radius:var(--r-full);margin-left:4px;vertical-align:middle}
+.seller-badge.verified{background:var(--blue-light);color:var(--blue)}
+.seller-badge.star{background:#fef3c7;color:#d97706}
 .acard{background:var(--white);border-radius:var(--r);border:1.5px solid var(--border);padding:13px;margin-bottom:9px;box-shadow:var(--shadow-sm);cursor:pointer;transition:all .2s}
 .acard:active{transform:scale(.99)}
 .acard-top{display:flex;gap:11px;align-items:flex-start}
@@ -1090,19 +1101,35 @@ async function renderGrid(cid, posts) {
       try { const d=await getDoc(doc(db,'profiles',p.userId)); profileCache[p.userId]=d.exists()?d.data():{name:'User',avatar:'U'}; } catch(e){ profileCache[p.userId]={name:'User',avatar:'U'}; }
     }
   }
+  // Sort: star first, then verified, then normal — by createdAt within each group
+  const sorted = [...posts].sort((a,b)=>{
+    const ua = profileCache[a.userId]||{};
+    const ub = profileCache[b.userId]||{};
+    const rankA = ua.badge==='star'?2:ua.badge==='verified'?1:0;
+    const rankB = ub.badge==='star'?2:ub.badge==='verified'?1:0;
+    if(rankB!==rankA) return rankB-rankA;
+    const tA = a.createdAt?.toMillis?a.createdAt.toMillis():0;
+    const tB = b.createdAt?.toMillis?b.createdAt.toMillis():0;
+    return tB-tA;
+  });
   const emojis = {'Halfmoon':'🐟','Crowntail / Serit':'🐠','Plakat':'🎏','Giant':'🐡','Rosetail':'💜','Double Tail':'🔵','Dumbo Ear':'👂','Lainnya':'🐟'};
-  c.innerHTML = posts.map(p=>{
+  c.innerHTML = sorted.map(p=>{
     const u = profileCache[p.userId]||{name:'User',avatar:'U'};
     const bc = p.type==='jual'?'pt-jual':p.type==='lelang'?'pt-lelang':'pt-beli';
     const bl = p.type==='jual'?'Jual':p.type==='lelang'?'Lelang':'Cari';
     const img = p.imageUrl ? `<img src="${p.imageUrl}" alt="" loading="lazy">` : `<div class="pcard-emoji">${emojis[p.jenis]||'🐟'}</div>`;
-    return `<div class="pcard" onclick="openDetail('${p.id}')">
-      <div class="pcard-img">${img}<span class="ptag ${bc}">${bl}</span></div>
+    const isStar = u.badge==='star';
+    const isVerified = u.badge==='verified';
+    const ribbon = isStar?'<span class="star-ribbon">⭐ Star</span>':isVerified?'<span class="verified-ribbon">✓ Verified</span>':'';
+    const cardClass = isStar?'pcard is-star':isVerified?'pcard is-verified':'pcard';
+    const sellerBadge = isStar?'<span class="seller-badge star">⭐ Star</span>':isVerified?'<span class="seller-badge verified">✓ Verified</span>':'';
+    return `<div class="${cardClass}" onclick="openDetail('${p.id}')">
+      <div class="pcard-img">${img}<span class="ptag ${bc}">${bl}</span>${ribbon}</div>
       <div class="pcard-body">
         <div class="pcard-title">${p.title}</div>
         <div class="pcard-price">${p.type==='beli'?'Budget ':''}Rp ${Number(p.price).toLocaleString('id')}</div>
         <div class="pcard-meta">
-          <div class="pcard-seller">👤 ${u.name?.split(' ')[0]||'User'}</div>
+          <div class="pcard-seller">👤 ${u.name?.split(' ')[0]||'User'}${sellerBadge}</div>
           <div class="pcard-cmt">💬 ${p.commentCount||0}</div>
         </div>
       </div>
@@ -1212,7 +1239,7 @@ window.openDetail = async function(pid) {
       <div class="dtitle">${post.title}</div>
       <div class="dprice">${post.type==='beli'?'Budget ':''}Rp ${Number(post.price).toLocaleString('id')}</div>
       <div class="seller-row">
-        <div class="s-info"><div class="s-av">${user.avatar||'U'}</div><div><div class="s-name">${user.name}</div><div class="s-city">📍 Batam</div></div></div>
+        <div class="s-info"><div class="s-av">${user.avatar||'U'}</div><div><div class="s-name">${user.name}${user.badge==='star'?'<span class="seller-badge star">⭐ Star</span>':user.badge==='verified'?'<span class="seller-badge verified">✓ Verified</span>':''}</div><div class="s-city">📍 Batam</div></div></div>
         <button class="btn-wa" onclick="contactWA('${user.phone||''}')">📱 WA</button>
       </div>
       ${adminAct}
